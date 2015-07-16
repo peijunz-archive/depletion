@@ -1,67 +1,9 @@
 #! /usr/bin/env python3
 from pylab import *
-def modi(q):
-    """Get a theta in the (0,2*pi) region by +2*k*pi"""
-    theta=q[1]
-    base=q[0]
-    return array([base,theta-floor((theta-base)/2/pi)*2*pi])
-class segm:
-    '''Line/Circle segment'''
-    def __init__(self,r,p,q):
-        '''The meaning of parameters:
-        r   radius
-        For line, p(x,y) is the start point and q(z,w) the end point
-        For circle, p(x,y) is the center and q(z,w) the start/end angle'''
-        self.r=r
-        self.p=array(p)
-        if r==0:
-            self.q=array(q)
-        else:
-            self.q=modi(q)
-    def pri(self):
-        """Print the info of the segmant"""
-        if self.r == 0:
-            print('Line\t',self.p,'____',self.q)
-        else:
-            print('Circle\tr=',self.r,'center',self.p,'range',self.q)
-    def dra(self,prop):
-        [x,y]=self.p
-        [z,w]=self.q
-        """Draw the segment by matplotlib"""
-        if self.r == 0:
-            plot((x,z),(y,w),prop)
-        else:
-            xx=[]
-            yy=[]
-            for t in arange(z,w,0.01):
-                xx.append(x+self.r*cos(t))
-                yy.append(y+self.r*sin(t))
-            plot(xx,yy,prop)
-    def rots(self,t):
-        '''rotate the segment'''
-        [x,y]=self.p
-        [z,w]=self.q
-        p1=rotp(self.p,t)
-        if self.r==0:
-            q1=rotp(self.q,t)
-            return segm(0,p1,q1)
-        else:
-            return segm(self.r,p1,self.q+t)
-    def shifts(self,delta):
-        '''add a delta(dx,dy) shift to the segment'''
-        if self.r==0:
-            return segm(0, self.p+delta, self.q+delta)
-        else:
-            return segm(self.r, self.p+delta, self.q)
-        
+from segm import *
 uni=pi/6
-def rotp(p,theta):
-    '''rotation a point'''
-    c=cos(theta)
-    s=sin(theta)
-    M=array([[c,-s],[s,c]])
-    return M.dot(p)
 def conc(H,b,r,h):
+    '''Constrution of basic curve'''
     cur=[]
     for i in range(3):
         rt=i*4*uni
@@ -72,125 +14,133 @@ def conc(H,b,r,h):
         p1=rotp(p,-4*uni)
         z=arctan2(p1[1]-cen[1],p1[0]-cen[0])
         w=arctan2(q[1]-cen[1],q[0]-cen[0])
-        R=mo(q-cen)
+        R=norm(q-cen)
         cur.append(segm(R,cen,[z,w]))
         cur.append(segm(0,q,top))
         cur.append(segm(0,top,p))
     return cur
 def verge(cur):
+    '''print the points'''
     for seg in cur:
         seg.pri()
 def drawc(cur,prop):
+    '''draw the curve in matplotlib'''
     for seg in cur:
         seg.dra(prop)
 def shiftc(cur,delta):
+    '''shift of a curve'''
     p=[]
     for seg in cur:
         p.append(seg.shifts(delta))
     return p
 def rotc(cur,t):
+    '''rotation of a curve'''
     p=[]
     for seg in cur:
         p.append(seg.rots(t))
     return p
-def intri(a,b,c,o):
-    '''利用三个叉乘矢量方向相同来判断'''
-    oa=o-a
-    ob=o-b
-    oc=o-c
-    C=cross(oa,ob)
-    A=cross(ob,oc)
-    B=cross(oc,oa)
-    if A*B>0 and B*C>0 and A*C>0:
-        return True
-    else:
-        return False
-def inbow(r,cen,ang,o):
-    '''Judge whether a point o is in a bow
-    利用圆周角大小关系以及矢量叉乘
-    '''
-    t0=pi-(ang[1]-ang[0])/2
-    l=cen+rect(r,z)
-    r=cen+rect(r,w)
-    v1=o-l
-    v2=o-r
-    if dot(v1,v2) < mo(v1)*mo(v2)*cos(t0) and cross(v1,v2)<0:
-        return True
-    else:
-        return False
-def atanv(v):
-    return arctan2(v[1],v[0])
-def mo(v):
-    return sqrt(sum(array(v)**2))
-def rect(r,theta):
-    return array([r*cos(theta),r*sin(theta)])
-def interll(s1,s2):
-    '''lm is lambda and mu'''
-    [l,m]=inv(array([s1.p-s1.q,s2.p-s2.q])).T.dot(s2.p-s1.q)
-    if 0<l and l<1 and 0<m and m<1:
-        return [l*s1.p+(1-l)*s1.q]
-    else:
-        return array([])
-def betw(q,theta):
-    return modi([q[0],theta])[1]<q[1]
-def interlc(l,c):
-    '''line---circle
-    '''
-    #三角形的三条边
-    a=l.p-c.p
-    b=l.q-c.p
-    delta=l.p-l.q
-    direc=delta/mo(delta)#直线的方向矢量
-    vert=a-dot(a,direc)*direc#垂线矢量，减去它相当于做投影变换
-    h=mo(vert)#垂线长度height
-    ah=a-vert
-    bh=b-vert
-    ret=[]
-    if h<abs(c.r):
-        con=sqrt(c.r**2-h**2)
-        pm=[con*direc,-con*direc]
-        for i in pm:
-            theta=atanv(vert+i)
-            #print(theta,c.q)s
-            if dot(ah-i,bh-i)<0 and betw(c.q,theta):
-                ret.append(c.p+vert+i)
-    return ret
-def intercc(c1,c2):
-    delta=c2.p-c1.p
-    d=mo(delta)
-    ret=[]
-    if abs(c1.r-c2.r)<d and d<c1.r+c2.r:
-        t1=atanv(delta)
-        t2=t1+pi
-        phi1=arccos((c1.r**2+d**2-c2.r**2)/(2*c1.r*d))
-        phi2=-arccos((c2.r**2+d**2-c1.r**2)/(2*c2.r*d))
-        print('theta',t1,t2)
-        print('phi:',phi1,phi2) 
-        for i in [1,-1]:
-            if betw(c1.q,t1+i*phi1) and betw(c2.q,t2+i*phi2):
-                ret.append(c1.p+rect(c1.r,t1+i*phi1))
-    return ret
-def intsecs(s1,s2):
-    '''Judge and get the intersect point(if exist)'''
-    if s1.r==0:
-        if s2.r==0:
-            return interll(s1,s2)
+def areal(poi):
+    '''area of a polygon consists of line segments'''
+    l=len(poi)
+    area=0
+    if l<2:
+        return 0
+    for i in range(l):
+        area+=cross(poi[i],poi[(i+1)%l])/2
+    return area
+def areac(cur):
+    '''area of a curve consists of line/circle segments'''
+    poly=[]
+    area=0
+    for seg in cur:
+        if seg.r==0:
+            poly.append(seg.p)
         else:
-            return interlc(s1,s2)
-    else:
-        if s2.r==0:
-            return interlc(s2,s1)
+            dt=seg.q[1]-seg.q[0]
+            p1=rect(seg.r,seg.q[0])#TODO, midify it, use the end point function
+            p2=rect(seg.r,seg.q[1])
+            area+=sign(cross(p1,p2-p1))*seg.r**2*(dt-sin(dt))/2
+            poly.append(seg.p+p1)
+    print('area of bow:', area)
+    ap=areal(poly)
+    print('area of poly:', ap)
+    area+=areal(poly)
+    return area
+def extent(cur,d):
+    '''cur is the curve to extent and d the distance of the pen'''
+    l=len(cur)
+    ext=[]
+    for i in range(l):
+        former=cur[i]
+        latter=cur[(i+1)%l]
+        ext.append(former.exts(d))
+        sig=sign(cross(former.enddir()[1], latter.enddir()[0]))
+        if sig==0:
+            continue    #when sig<0, the curve break temporarily
+        elif sig<0:    #the condition sig<0 can be simplified to return a null
+            ff=former.exts(d)
+            ll=latter.exts(d)
+            s=segm(0,ff.endp()[1],ll.endp()[0])
+            #s.dra('b')
+            ext.append(s)
         else:
-            return intercc(s1,s2)
-        
+            c=former.endp()[1]
+            q=[former.endth()[1],latter.endth()[0]]
+            ext.append(segm(d,c,q))
+    return ext
+def jointc(cn,seg):
+    '''multi points condition not concerned'''
+    tmp=[]
+    if len(cn)<=1:
+        cn.append(seg)
+        return cn
+    for s in cn[0:-1]:
+        cro=intsecs(s,seg)
+        if cro:
+            i=cn.index(s)
+            cn=cn[0:i]
+            po=cro[0]
+            s1=s.sep(po)[0]
+            s2=seg.sep(po)[1]
+            s1.pri()
+            s2.pri()
+            cn.append(s1)
+            cn.append(s2)
+            print('newnew')
+            verge(cn)
+            return cn
+    cn.append(seg)
+    return cn
+def rminsect(cur):
+    '''remove the inner intersect segments of a curve'''
+    cn=[]
+    for seg in cur:
+        #print('CN1:')
+        #verge(cn)
+        #print('seg:')
+        seg.pri()
+        cn=jointc(cn,seg)
+        print('CN2:')
+        verge(cn)
+    return cn
 if __name__=='__main__':
     #Test function
     plt.axis('equal')
     hold(True)
-    #c=conc(1,0.1,2,-0.2)
+    #测试旋转平移等功能的正确性
+    c=conc(1,0.1,2,+0.3)
+    ce=extent(c,0.05)
+    s=segm(0,[0,0],[0.1,1])
+    crm=rminsect(ce)
+    drawc(ce,'b')
+    drawc(c,'r')
+    print(len(crm))
+    verge(crm)
+    drawc(crm,'g')
     #d=conc(1.1,0.11,2.2,+0.3)
     #drawc(c,'r')
     #drawc(shiftc(rotc(d,2*uni),[3,4]),'b')
+    #测试判断相交性的函数
     #intri([0,1],[1,0],[0,0],[0.2,0.3])
     #p1=array([0,1])
     #p2=array([2,0])
@@ -199,12 +149,18 @@ if __name__=='__main__':
     #print(interll(p1,p2,q1,q2))
     #q=array([-20*uni,-3*uni])
     #print(modi(q))
-    l=segm(0,[-0.6,-0.81],[1,0.2])
-    c1=segm(1,[-0.3,3],[2*uni,11*uni])
-    c2=segm(1.2,[0,0.1],[3*uni,9*uni])
-    print(intercc(c1,c2))
-    c1.dra('b')
-    c2.dra('r')
+    #测试面积函数的正确性
+    #l=segm(0,[-0.6,-0.81],[1,0.2])
+    #c1=segm(1,[-0.3,3],[2*uni,11*uni])
+    #c2=segm(1.2,[0,0.1],[3*uni,9*uni])
+    #print(intercc(c1,c2))
+    #c1.dra('b')
+    #c2.dra('r')
     savefig('verge.pdf')
-    #print(interlc(l,c1))
+    ##print(interlc(l,c1))
+    #cur=[segm(0,[0,0],[sqrt(3)/2,0.5]),segm(1,[0,0],[uni,2*uni]),segm(0,[0.5,sqrt(3)/2],[0,0])]
+    #print(areac(cur))
+    #print(pi/12)
+    #测试去除内自交
     print('Tasks completed!')
+#Area function should me modified for the clockwise case?
