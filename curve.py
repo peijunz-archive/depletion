@@ -48,6 +48,59 @@ def areal(poi):
     for i in range(l):
         area+=cross(poi[i],poi[(i+1)%l])/2
     return area
+def cur2pcur(cur):
+    '''Only applicable when cur is close'''
+    pcur=[]
+    l=len(cur)
+    for i in range(l):
+        seg=cur[i]
+        start=seg.endp()[0]
+        pcur.append([start,seg,(i+1)%l])
+    return pcur
+def addpcur(pc1,pc2):
+    l=len(pc1)
+    ap=pc1+pc2
+    for p in ap[l:]:
+        p[2]+=l
+    return ap
+def cutpcur(pc):
+    i=1
+    while i<len(pc):
+        for j in range(i):
+            lis=intsecs(pc[j][1],pc[i][1])
+            if len(lis)==1:
+                p=lis[0]
+                [s1,s2]=pc[j][1].sep(p)
+                [s3,s4]=pc[i][1].sep(p)
+                jnex=pc[j][2]
+                inex=pc[i][2]
+                pc[i][1:]=[s3,len(pc)]
+                pc.append([p,s2,jnex])
+                pc[j][1:]=[s1,len(pc)]
+                pc.append([p,s4,inex])
+
+            elif len(lis)>1:
+                print('Consider more! FIX ME')
+        i+=1
+    return pc
+def sepcur(pc):
+    cg=[]#Groups of curve
+    l=len(pc)
+    sig=zeros(l)
+    for i in range(l):
+        if sig[i]==0:
+            t=pc[i]
+            sig[i]=1
+            tmp=[t[1]]
+            while True:
+                j=t[2]
+                t=pc[j]
+                if j==i:
+                    break
+                sig[j]=1
+                tmp.append(t[1])
+            cg.append(tmp)
+    return cg
 def areac(cur):
     '''area of a curve consists of line/circle segments'''
     poly=[]
@@ -94,10 +147,11 @@ def jointc(cn,seg):
     if len(cn)<=1:
         cn.append(seg)
         return cn
-    for s in cn[0:-1]:
+    for s in cn:
         cro=intsecs(s,seg)
         if cro:
             i=cn.index(s)
+            close=cn[i:]
             cn=cn[0:i]
             po=cro[0]
             s1=s.sep(po)[0]
@@ -112,31 +166,45 @@ def jointc(cn,seg):
     cn.append(seg)
     return cn
 def rminsect(cur):
-    '''remove the inner intersect segments of a curve'''
+    '''remove the inner intersect segments of a curve. DIRTY'''
+    #cgroup=[]
     cn=[]
-    for seg in cur:
+    l=len(cur)
+    for i in range(l):
+        seg=cur[i]
         #print('CN1:')
         #verge(cn)
         #print('seg:')
         seg.pri()
         cn=jointc(cn,seg)
+        #tmp=jointc(cn,seg)
+        #cn=tmp[0]
+        #cgroup.append(tmp[1])
         print('CN2:')
         verge(cn)
+    #cgroup.append(cn)
+    #carea=[areac(j) for j in cgroup]
     return cn
 if __name__=='__main__':
     #Test function
     plt.axis('equal')
     hold(True)
     #测试旋转平移等功能的正确性
-    c=conc(1,0.1,2,+0.3)
-    ce=extent(c,0.05)
-    s=segm(0,[0,0],[0.1,1])
-    crm=rminsect(ce)
+    c=conc(1,0.1,2,0.2)
+    ce=extent(c,.3)
+    s=segm(0,[0,0],[-0.1,1])
+    #crm=rminsect(ce)
     drawc(ce,'b')
     drawc(c,'r')
-    print(len(crm))
-    verge(crm)
-    drawc(crm,'g')
+    t=cutpcur(cur2pcur(ce))
+    sepc=sepcur(t)
+    ar=[areac(cu) for cu in sepc]
+    i=ar.index(max(ar))
+    fcur=sepc[i]
+    drawc(fcur,'g')
+    #print(len(crm))
+    #verge(crm)
+    #drawc(crm,'g')
     #d=conc(1.1,0.11,2.2,+0.3)
     #drawc(c,'r')
     #drawc(shiftc(rotc(d,2*uni),[3,4]),'b')

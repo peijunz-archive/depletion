@@ -1,26 +1,6 @@
 #! /usr/bin/env python3
 from pylab import *
-def cs(v1,v2):
-    return sign(cross(v1,v2))
-def atanv(v):
-    return arctan2(v[1],v[0])
-def rect(r,theta):
-    return array([r*cos(theta),r*sin(theta)])
-def rotp(p,theta):
-    '''rotation a point'''
-    c=cos(theta)
-    s=sin(theta)
-    M=array([[c,-s],[s,c]])
-    return M.dot(p)
-def modi(base,theta):
-    """Get a theta in the (0,2*pi) region by +2*k*pi"""
-    return theta-floor((theta-base)/2/pi)*2*pi
-def betw(q,theta):
-    t=modi(min(q),theta)
-    if t<max(q):
-        return t
-    else:
-        return False
+from points import *
 class segm:
     '''Line/Circle segment'''
     def __init__(self,r,p,q):
@@ -42,6 +22,9 @@ class segm:
             print('Line\t',self.p,self.q)
         else:
             print('Circle\t',self.endp())
+    def __str__(self):
+        '''print end points infomations'''
+        return str(list(self.endp()[0]))
     def dra(self,prop):
         [x,y]=self.p
         [z,w]=self.q
@@ -117,10 +100,16 @@ class segm:
             s1=segm(self.r,self.p,[self.q[0],phi])
             s2=segm(self.r,self.p,[phi,self.q[1]])
             return [s1,s2]
+    def dist(self,pt):
+        '''calculate the distance between pt and start point'''
+        pass
+    __repr__ = __str__
 def interll(s1,s2):
     '''intersection of two line segment. lm is lambda and mu'''
+    if abs(cross(s1.p-s1.q,s2.p-s2.q))<infs:
+        return []
     [l,m]=inv(array([s1.p-s1.q,s2.p-s2.q])).T.dot(s2.p-s1.q)
-    if 0<l and l<1 and 0<m and m<1:
+    if infs<l and l<1-infs and infs<m and m<1-infs:
         return [l*s1.p+(1-l)*s1.q]
     else:
         return []
@@ -142,7 +131,7 @@ def interlc(l,c):
         for i in pm:
             theta=atanv(vert+i)
             #print(theta,c.q)
-            if dot(ah-i,bh-i)<0 and betw(c.q,theta):
+            if dot(ah-i,bh-i)<-infs and betw(c.q,theta+infs) and betw(c.q,theta-infs):
                 ret.append(c.p+vert+i)
     return ret
 def intercc(c1,c2):
@@ -150,7 +139,8 @@ def intercc(c1,c2):
     delta=c2.p-c1.p
     d=norm(delta)
     ret=[]
-    if abs(c1.r-c2.r)<d and d<c1.r+c2.r:
+    if abs(c1.r-c2.r)+infs<d and d+infs<c1.r+c2.r:
+        #print(c1.r,c2.r,d)
         t1=atanv(delta)
         t2=t1+pi
         phi1=arccos((c1.r**2+d**2-c2.r**2)/(2*c1.r*d))
