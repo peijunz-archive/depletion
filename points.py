@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 from pylab import *
+uni=pi/6
 infs=1e-10
 def cs(v1,v2):
     return sign(cross(v1,v2))
@@ -15,7 +16,7 @@ def rotp(p,theta):
     return M.dot(p)
 def modi(base,theta):
     """Get a theta in the (0,2*pi) region by +2*k*pi"""
-    return theta-floor((theta-base)/2/pi)*2*pi
+    return theta-floor((theta-base-infs)/(2*pi))*2*pi
 def betw(q,theta):
     t1=modi(min(q),theta+infs)
     t2=modi(min(q),theta-infs)

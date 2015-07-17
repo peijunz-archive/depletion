@@ -18,10 +18,7 @@ class segm:
         self.r=abs(r)
     def pri(self):
         """Print the info of the segmant"""
-        if self.r == 0:
-            print('Line\t',self.p,self.q)
-        else:
-            print('Circle\t',self.endp())
+        print(self.r,self.p,self.q)
     def __str__(self):
         '''print end points infomations'''
         return str(list(self.endp()[0]))
@@ -102,7 +99,11 @@ class segm:
             return [s1,s2]
     def dist(self,pt):
         '''calculate the distance between pt and start point'''
-        pass
+        if self.r==0:
+            return norm(pt-selp.p)
+        else:
+            phi=betw(self.q,atanv(pt-self.p))
+            return abs(phi-self.q[0])
     __repr__ = __str__
 def interll(s1,s2):
     '''intersection of two line segment. lm is lambda and mu'''
