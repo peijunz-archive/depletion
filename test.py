@@ -8,7 +8,7 @@ hold(True)
 #测试旋转平移等功能的正确性
 c1=conc(1,0.1,2,0.2)
 c2=shiftc(conc(1,0.1,2,-0.2),[1.2,0.5])
-ce1=extent(c1,.05)
+ce1=extent(c1,.5)
 ce2=extent(c2,.05)
 #s=segm(0,[0,0],[-0.1,1])
 #crm=rminsect(ce)

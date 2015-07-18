@@ -107,16 +107,16 @@ class segm:
     __repr__ = __str__
 def interll(s1,s2):
     '''intersection of two line segment. lm is lambda and mu'''
-    if abs(cross(s1.p-s1.q,s2.p-s2.q))<infs:
+    M=array([s1.p-s1.q,s2.p-s2.q])
+    if abs(det(M))<infs:
         return []
-    [l,m]=inv(array([s1.p-s1.q,s2.p-s2.q])).T.dot(s2.p-s1.q)
-    if infs<l and l<1-infs and infs<m and m<1-infs:
+    [l,m]=inv(M).T.dot(s2.p-s1.q)
+    if infs<l<1-infs and infs<m<1-infs:
         return [l*s1.p+(1-l)*s1.q]
     else:
         return []
 def interlc(l,c):
     '''intersection of two line--circle'''
-    #三角形的三条边
     a=l.p-c.p
     b=l.q-c.p
     delta=l.p-l.q
@@ -140,7 +140,7 @@ def intercc(c1,c2):
     delta=c2.p-c1.p
     d=norm(delta)
     ret=[]
-    if abs(c1.r-c2.r)+infs<d and d+infs<c1.r+c2.r:
+    if abs(c1.r-c2.r)+infs<d<c1.r+c2.r-infs:
         #print(c1.r,c2.r,d)
         t1=atanv(delta)
         t2=t1+pi

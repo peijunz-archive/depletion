@@ -2,8 +2,6 @@
 from pylab import *
 uni=pi/6
 infs=1e-10
-def cs(v1,v2):
-    return sign(cross(v1,v2))
 def atanv(v):
     return arctan2(v[1],v[0])
 def rect(r,theta):
@@ -24,6 +22,8 @@ def betw(q,theta):
         return (t1+t2)/2
     else:
         return False
+#def cs(v1,v2):
+    #return sign(cross(v1,v2))
 #def intri(a,b,c,o):
     #'''利用三个叉乘矢量方向相同来判断'''
     #oa=o-a
