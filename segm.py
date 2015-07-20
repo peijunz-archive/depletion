@@ -55,7 +55,7 @@ class segm:
         '''Get extension of a SINGLE segment'''
         if self.r==0:
             direc=self.q-self.p
-            n=direc/norm(direc)
+            n=direc/norm2(direc)
             return self.shifts(dis*rotp(n,-pi/2))
         if self.r>0:
             if(self.q[1]>self.q[0]):
@@ -69,7 +69,7 @@ class segm:
         '''Calculate Tangent direction vector of start point and end point'''
         if self.r==0:
             delta=self.q-self.p
-            t=delta/norm(delta)
+            t=delta/norm2(delta)
             return [t,t]
         else:
             t1=rect(1,self.q[0]+pi/2)
@@ -82,6 +82,7 @@ class segm:
         '''
         td=self.enddir()
         return array([atanv(td[0])-pi/2,atanv(td[1])-pi/2])
+    #@profile
     def endp(self):
         '''calculate the end points'''
         if self.r==0:
@@ -100,29 +101,39 @@ class segm:
     def dist(self,pt):
         '''calculate the distance between pt and start point'''
         if self.r==0:
-            return norm(pt-selp.p)
+            return norm2(pt-self.p)
         else:
             phi=betw(self.q,atanv(pt-self.p))
             return abs(phi-self.q[0])
+    #def bound(self):
+        #if r==0:
+            #xi,xa=[self.p[0],self.q[0]].sort()
+            #yi,ya=[self.p[1],self.q[1]].sort()
     __repr__ = __str__
+@profile
 def interll(s1,s2):
     '''intersection of two line segment. lm is lambda and mu'''
+    a=s1.p-s1.q
+    b=s2.p-s2.q
+    dot(a,b)
     M=array([s1.p-s1.q,s2.p-s2.q])
-    if abs(det(M))<infs:
+    d=a[0]*b[1]-a[1]*b[0]
+    if abs(d)<infs:
         return []
     [l,m]=inv(M).T.dot(s2.p-s1.q)
     if infs<l<1-infs and infs<m<1-infs:
         return [l*s1.p+(1-l)*s1.q]
     else:
         return []
+@profile
 def interlc(l,c):
     '''intersection of two line--circle'''
     a=l.p-c.p
     b=l.q-c.p
     delta=l.p-l.q
-    direc=delta/norm(delta)#直线的方向矢量
+    direc=delta/norm2(delta)#直线的方向矢量
     vert=a-dot(a,direc)*direc#垂线矢量，减去它相当于做投影变换
-    h=norm(vert)#垂线长度height
+    h=norm2(vert)#垂线长度height
     ah=a-vert
     bh=b-vert
     ret=[]
@@ -135,10 +146,13 @@ def interlc(l,c):
             if dot(ah-i,bh-i)<-infs and betw(c.q,theta+infs) and betw(c.q,theta-infs):
                 ret.append(c.p+vert+i)
     return ret
+def norm2(l):
+    return sqrt(l[0]*l[0]+l[1]*l[1])
+@profile
 def intercc(c1,c2):
     '''intersection of two circle--circle'''
     delta=c2.p-c1.p
-    d=norm(delta)
+    d=norm2(delta)
     ret=[]
     if abs(c1.r-c2.r)+infs<d<c1.r+c2.r-infs:
         #print(c1.r,c2.r,d)
@@ -152,9 +166,13 @@ def intercc(c1,c2):
             if betw(c1.q,t1+i*phi1) and betw(c2.q,t2+i*phi2):
                 ret.append(c1.p+rect(c1.r,t1+i*phi1))
     return ret
+#@profile
 def intsecs(s1,s2):
     '''Judge and get the intersect point(if exist)
-    Intersect with end point will not be considered intersect'''
+    Intersect with end point will not be considered intersect
+    Consider that under most condition they will not cross with others
+    Calculate and compare the bound maybe useful
+    '''
     if s1.r==0:
         if s2.r==0:
             return interll(s1,s2)

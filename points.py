@@ -1,9 +1,13 @@
 #! /usr/bin/env python3
 from pylab import *
+#from numpy.linalg import norm
 uni=pi/6
+pi2=2*pi
 infs=1e-10
+#@profile
 def atanv(v):
     return arctan2(v[1],v[0])
+#@profile
 def rect(r,theta):
     return array([r*cos(theta),r*sin(theta)])
 def rotp(p,theta):
@@ -12,16 +16,24 @@ def rotp(p,theta):
     s=sin(theta)
     M=array([[c,-s],[s,c]])
     return M.dot(p)
+#@profile
 def modi(base,theta):
-    """Get a theta in the (0,2*pi) region by +2*k*pi"""
-    return theta-floor((theta-base-infs)/(2*pi))*2*pi
+    """Get a theta in the (0,2*pi) region by +2*k*pi
+    ??inf
+    """
+    return theta-floor((theta-base-infs)/pi2)*pi2
+@profile
 def betw(q,theta):
-    t1=modi(min(q),theta+infs)
-    t2=modi(min(q),theta-infs)
-    if t1<max(q) and t2<max(q):
-        return (t1+t2)/2
+    if q[0]<q[1]:
+        mi,ma=q
     else:
-        return False
+        ma,mi=q
+    t1=modi(mi,theta+2*infs)
+    if t1<ma:
+        t2=modi(mi,theta)
+        if(t2<ma):
+            return (t1+t2)/2
+    return False
 #def cs(v1,v2):
     #return sign(cross(v1,v2))
 #def intri(a,b,c,o):
@@ -44,7 +56,7 @@ def betw(q,theta):
     #r=cen+rect(r,w)
     #v1=o-l
     #v2=o-r
-    #if dot(v1,v2) < norm(v1)*norm(v2)*cos(t0) and cross(v1,v2)<0:
+    #if dot(v1,v2) < norm2(v1)*norm2(v2)*cos(t0) and cross(v1,v2)<0:
         #return True
     #else:
         #return False

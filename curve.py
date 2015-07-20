@@ -13,7 +13,7 @@ def conc(H,b,r,h):
         p1=rotp(p,-4*uni)
         z=arctan2(p1[1]-cen[1],p1[0]-cen[0])
         w=arctan2(q[1]-cen[1],q[0]-cen[0])
-        R=norm(q-cen)
+        R=norm2(q-cen)
         cur.append(segm(R,cen,[z,w]))
         cur.append(segm(0,q,top))
         cur.append(segm(0,top,p))
@@ -28,6 +28,7 @@ def shiftc(cur,delta):
     for seg in cur:
         p.append(seg.shifts(delta))
     return p
+#@profile
 def rotc(cur,t):
     '''rotation of a curve'''
     p=[]
@@ -61,6 +62,7 @@ def areac(cur):
     #print('area of poly:', ap)
     area+=areal(poly)
     return area
+#@profile
 def cur2pcur(cur):
     '''Only applicable when cur is close.
     p means the data structure is based on points
@@ -79,6 +81,7 @@ def addpcur(pc1,pc2):
     for p in ap[l:]:
         p[2]+=l
     return ap
+#@profile
 def cutpcur(pc):
     '''find all joint points and reconnect the pcurve according to it'''
     i=1
@@ -121,6 +124,7 @@ def sepcur(pc):
                 tmp.append(t[1])
             cg.append(tmp)
     return cg
+#@profile
 def extent(cur,d):
     '''cur is the curve to extent and d the distance of the pen
     first to get piles of smaller simple curves of its raw extension
@@ -146,12 +150,8 @@ def extent(cur,d):
             q=[former.endth()[1],latter.endth()[0]]
             ext.append(segm(d,c,q))
     #Cut the redundant part of the curve
-    t=cutpcur(cur2pcur(ext))
-    sepc=sepcur(t)
-    ar=[areac(cu) for cu in sepc]
-    i=ar.index(max(ar))
-    fcur=sepc[i]
-    return fcur
+    return max(sepcur(cutpcur(cur2pcur(ext))),key=areac)
+#@profile
 def intsecc(cur1,cur2):
     pc1=cur2pcur(cur1)
     pc2=cur2pcur(cur2)
@@ -164,12 +164,40 @@ def intsecc(cur1,cur2):
     ar=array([areac(cu) for cu in t])
     pos=(abs(ar)+ar)/2
     neg=ar-pos
-    #print(pos)
-    #print(neg)
-    #print('area of regions',ar)
-    #print('sum of area',sum(ar))
-    #print('area of two region')
-    #print(areac(cur1))
-    #print(areac(cur2))
-    #print('Intersection area:',sum(pos)-max(pos))
     return sum(pos)-max(pos)
+#@profile
+def issec(cur1,cur2):
+    for si in cur1:
+        for sj in cur2:
+            if len(intsecs(si,sj))!=0:
+                return True
+    return False
+#@profile
+def poten(cur1,cur2,distance,rp):
+    c2=shiftc(cur2,[distance,0])
+    #if issec(cur1,c2):
+        #return 0.1
+    cr1=extent(cur1,rp)
+    cr2=extent(c2,rp)
+    return -intsecc(cr1,cr2)
+#@profile
+def closest(t1,t2,rp):
+    #TODO:提高效率
+    lef=1
+    rig=3
+    num=12+int(floor(log((rig-lef)/rp)))
+    for i in range(num):
+        cen=(lef+rig)/2
+        #print(issec(t1,shiftc(t2,[cen,0])))
+        if issec(t1,shiftc(t2,array([cen,0]))):
+            lef=cen
+        else:
+            rig=cen
+    return rig
+def draw2(c1,cur2,distance,rp):
+    c2=shiftc(cur2,[distance,0])
+    drawc(c1,'k')
+    drawc(c2,'k')
+    drawc(extent(c1,rp),'g')
+    drawc(extent(c2,rp),'r')
+    return 0
