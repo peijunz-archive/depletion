@@ -1,6 +1,37 @@
 #! /usr/bin/env python3
 from pylab import *
 from segm import *
+def tricur(r):
+    p0=rect(r,-uni)
+    p1=rect(r,3*uni)
+    s1=segm(0,p0,p1)
+    s2=s1.rots(4*uni)
+    s3=s1.rots(8*uni)
+    return [s1,s2,s3]
+def tricave(r,theta):
+    #theta should be less than uni
+    sc=segm(r,[0,0],[-uni+theta,3*uni-theta])
+    p1=rect(r,3*uni-theta)
+    p2=array([0,p1[1]-sqrt(3)*p1[0]])
+    p3=rect(r,3*uni+theta)
+    s1=segm(0,p1,p2)
+    s2=segm(0,p2,p3)
+    c1=[sc,s1,s2]
+    c2=rotc(c1,4*uni)
+    c3=rotc(c1,8*uni)
+    return c1+c2+c3
+def tritri(r,d):
+    #theta should be less than uni
+    sc=segm(r,[0,0],[-uni+theta,3*uni-theta])
+    p1=rect(r,3*uni-theta)
+    p2=array([0,p1[1]-sqrt(3)*p1[0]])
+    p3=rect(r,3*uni+theta)
+    s1=segm(0,p1,p2)
+    s2=segm(0,p2,p3)
+    c1=[sc,s1,s2]
+    c2=rotc(c1,4*uni)
+    c3=rotc(c1,8*uni)
+    return c1+c2+c3
 def conc(H,b,r,h):
     '''Constrution of basic curve'''
     cur=[]
@@ -18,7 +49,7 @@ def conc(H,b,r,h):
         cur.append(segm(0,q,top))
         cur.append(segm(0,top,p))
     return cur
-def drawc(cur,prop):
+def drawc(cur,prop='b'):
     '''draw the curve in matplotlib'''
     for seg in cur:
         seg.dra(prop)
@@ -35,6 +66,7 @@ def rotc(cur,t):
     for seg in cur:
         p.append(seg.rots(t))
     return p
+#@profile
 def areal(poi):
     '''area of a polygon consists of line segments'''
     l=len(poi)
@@ -42,8 +74,9 @@ def areal(poi):
     if l<2:
         return 0
     for i in range(l):
-        area+=cross(poi[i],poi[(i+1)%l])/2
+        area+=cross2(poi[i],poi[(i+1)%l])/2
     return area
+#@profile
 def areac(cur):
     '''area of a curve consists of line/circle segments'''
     poly=[]
@@ -55,10 +88,8 @@ def areac(cur):
             dt=seg.q[1]-seg.q[0]
             p1=rect(seg.r,seg.q[0])#TODO, midify it, use the end point function
             p2=rect(seg.r,seg.q[1])
-            area+=sign(cross(p1,p2-p1))*seg.r**2*(dt-sin(dt))/2
+            area+=sign(cross2(p1,p2-p1))*seg.r**2*(dt-sin(dt))/2
             poly.append(seg.p+p1)
-    #print('area of bow:', area)
-    ap=areal(poly)
     #print('area of poly:', ap)
     area+=areal(poly)
     return area
@@ -105,6 +136,7 @@ def cutpcur(pc):
             pc.append([p,s4,inex])
         i+=1
     return pc
+#@profile
 def sepcur(pc):
     '''separate the different close simple curves'''
     cg=[]#Groups of curve
@@ -125,7 +157,7 @@ def sepcur(pc):
             cg.append(tmp)
     return cg
 #@profile
-def extent(cur,d):
+def extent_raw(cur,d):
     '''cur is the curve to extent and d the distance of the pen
     first to get piles of smaller simple curves of its raw extension
     then get the final curve that has biggest area!
@@ -136,7 +168,7 @@ def extent(cur,d):
         former=cur[i]
         latter=cur[(i+1)%l]
         ext.append(former.exts(d))
-        sig=sign(cross(former.enddir()[1], latter.enddir()[0]))
+        sig=sign(cross2(former.enddir()[1], latter.enddir()[0]))
         if sig==0:
             continue    #when sig<0, the curve break temporarily
         elif sig<0:    #the condition sig<0 can be simplified to return a null
@@ -150,7 +182,9 @@ def extent(cur,d):
             q=[former.endth()[1],latter.endth()[0]]
             ext.append(segm(d,c,q))
     #Cut the redundant part of the curve
-    return max(sepcur(cutpcur(cur2pcur(ext))),key=areac)
+    return ext
+def extent(cur,d):
+    return max(sepcur(cutpcur(cur2pcur(extent_raw(cur,d)))),key=areac)
 #@profile
 def intsecc(cur1,cur2):
     pc1=cur2pcur(cur1)
@@ -194,10 +228,54 @@ def closest(t1,t2,rp):
         else:
             rig=cen
     return rig
+def draw2_raw(c1,cur2,distance,rp):
+    c2=shiftc(cur2,[distance,0])
+    drawc(c1,'k')
+    drawc(c2,'k')
+    t1=extent_raw(c1,rp)
+    t2=extent_raw(c2,rp)
+    drawc(t1,'g')
+    drawc(t2,'r')
+    print(intsecc(t1,t2))
+    return 0
 def draw2(c1,cur2,distance,rp):
     c2=shiftc(cur2,[distance,0])
     drawc(c1,'k')
     drawc(c2,'k')
-    drawc(extent(c1,rp),'g')
-    drawc(extent(c2,rp),'r')
+    t1=extent(c1,rp)
+    t2=extent(c2,rp)
+    drawc(t1,'g')
+    drawc(t2,'r')
+    print(intsecc(t1,t2))
     return 0
+def binde(a,b,t1,t2,rp):
+
+    c1=rotc(a,t1)
+    c2=rotc(b,t2)
+    r1=closest(c1,c2,rp)
+    return poten(c1,c2,r1,rp)
+def center1(delta,pt):
+    x=linspace(-uni-delta*uni,-uni+delta*uni,pt)
+    y=linspace(uni-delta*uni,uni+delta*uni,pt)
+    return x,y
+def center2(delta,pt):
+    x=linspace(uni-delta*uni,uni+delta*uni,pt)
+    y=linspace(-uni-delta*uni,-uni+delta*uni,pt)
+    return x,y
+def curve1():
+    c1=conc(1,0.2,1,0.5)
+    c2=conc(1,0.2,1,-0.5)
+    return c1,c2
+def curve2(r=1,theta=uni/2):
+    c1=tricur(r)
+    c2=tricave(r,theta)
+    return c1,c2
+def curve3():
+    s1=segm(1,[0,0],[-uni,2*uni])
+    s2=segm(-1,[0,sqrt(3)],[-2*uni,-3*uni])
+    s3=segm(0,[0,sqrt(3)-1],[0,1])
+    c0=[s1,s2,s3]
+    c1=rotc(c0,4*uni)
+    c2=rotc(c0,8*uni)
+    c=c0+c1+c2
+    return c,c

@@ -22,7 +22,7 @@ def modi(base,theta):
     ??inf
     """
     return theta-floor((theta-base-infs)/pi2)*pi2
-@profile
+#@profile
 def betw(q,theta):
     if q[0]<q[1]:
         mi,ma=q

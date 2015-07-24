@@ -3,7 +3,7 @@ from pylab import *
 from points import *
 class segm:
     '''Line/Circle segment'''
-    def __init__(self,r,p,q):
+    def __init__(self,r,p,q,sig=1):
         '''The meaning of parameters:
         r   radius
         For line, p(x,y) is the start point and q(z,w) the end point
@@ -15,6 +15,7 @@ class segm:
             self.q=array([q[0],modi(*q)])
         else:
             self.q=array([q[0],modi(*q)-2*pi])
+        self.sig=sign(r)
         self.r=abs(r)
     def pri(self):
         """Print the info of the segmant"""
@@ -44,13 +45,13 @@ class segm:
             q1=rotp(self.q,t)
             return segm(0,p1,q1)
         else:
-            return segm(self.r,p1,self.q+t)
+            return segm(self.r*self.sig,p1,self.q+t)
     def shifts(self,delta):
         '''add a delta(dx,dy) shift to the segment'''
         if self.r==0:
             return segm(0, self.p+delta, self.q+delta)
         else:
-            return segm(self.r, self.p+delta, self.q)
+            return segm(self.r*self.sig, self.p+delta, self.q)
     def exts(self,dis):
         '''Get extension of a SINGLE segment'''
         if self.r==0:
@@ -58,13 +59,14 @@ class segm:
             n=direc/norm2(direc)
             return self.shifts(dis*rotp(n,-pi/2))
         if self.r>0:
-            if(self.q[1]>self.q[0]):
-                return segm(self.r+dis,self.p,self.q)
-            else:
-                if self.r<dis:
-                    print('ERROR: r should be bigger than dis')
-                    return self
-                return segm(self.r-dis,self.p,self.q)
+            return segm(self.r*self.sig+dis,self.p,self.q)
+            #if(self.q[1]>self.q[0]):
+                #return segm(self.r+dis,self.p,self.q)
+            #else:
+                #if self.r<dis:
+                    #print('ERROR: r should be bigger than dis')
+                    #return self
+                #return segm(self.r-dis,self.p,self.q)
     def enddir(self):
         '''Calculate Tangent direction vector of start point and end point'''
         if self.r==0:
@@ -95,8 +97,8 @@ class segm:
                 return [segm(0,self.p,pt),segm(0,pt,self.q)]
         else:
             phi=betw(self.q,atanv(pt-self.p))
-            s1=segm(self.r,self.p,[self.q[0],phi])
-            s2=segm(self.r,self.p,[phi,self.q[1]])
+            s1=segm(self.r*self.sig,self.p,[self.q[0],phi])
+            s2=segm(self.r*self.sig,self.p,[phi,self.q[1]])
             return [s1,s2]
     def dist(self,pt):
         '''calculate the distance between pt and start point'''
@@ -110,22 +112,26 @@ class segm:
             #xi,xa=[self.p[0],self.q[0]].sort()
             #yi,ya=[self.p[1],self.q[1]].sort()
     __repr__ = __str__
-@profile
+def cross2(a,b):
+    return a[0]*b[1]-b[0]*a[1]
+#@profile
 def interll(s1,s2):
     '''intersection of two line segment. lm is lambda and mu'''
     a=s1.p-s1.q
     b=s2.p-s2.q
-    dot(a,b)
-    M=array([s1.p-s1.q,s2.p-s2.q])
-    d=a[0]*b[1]-a[1]*b[0]
-    if abs(d)<infs:
+    c=s2.p-s1.q
+    ab=cross2(a,b)
+    if abs(ab)<infs:
         return []
-    [l,m]=inv(M).T.dot(s2.p-s1.q)
+    bc=cross2(c,b)
+    ca=cross2(a,c)
+    l=bc/ab
+    m=ca/ab
     if infs<l<1-infs and infs<m<1-infs:
         return [l*s1.p+(1-l)*s1.q]
     else:
         return []
-@profile
+#@profile
 def interlc(l,c):
     '''intersection of two line--circle'''
     a=l.p-c.p
@@ -148,7 +154,7 @@ def interlc(l,c):
     return ret
 def norm2(l):
     return sqrt(l[0]*l[0]+l[1]*l[1])
-@profile
+#@profile
 def intercc(c1,c2):
     '''intersection of two circle--circle'''
     delta=c2.p-c1.p
@@ -172,6 +178,7 @@ def intsecs(s1,s2):
     Intersect with end point will not be considered intersect
     Consider that under most condition they will not cross with others
     Calculate and compare the bound maybe useful
+    This is the key function affect the performance
     '''
     if s1.r==0:
         if s2.r==0:
