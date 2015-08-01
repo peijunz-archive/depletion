@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from curve import *
-c1,c2=curve1()
+from instance import *
+c1,c2=curve7()
 rp=0.03
-side=1
-x,y=center1(side,21)
+side=2
+#x,y=center0(side,21,[1.6,-0.4])
+x,y=center0(side,11,[0,0])
 m=len(x)
 n=len(y)
 z=zeros([n,m])
@@ -19,4 +21,5 @@ CS=contourf(x,y,z)
 colorbar(CS)
 plt.axis('equal')
 #drawc(c)
+savefig('binding.svg')
 savefig('binding.pdf')

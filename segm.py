@@ -107,6 +107,11 @@ class segm:
         else:
             phi=betw(self.q,atanv(pt-self.p))
             return abs(phi-self.q[0])
+    def rev(self):
+        if self.r==0:
+            return segm(0,self.q,self.p)
+        else:
+            return segm(-self.r*self.sig,self.p,[self.q[1],self.q[0]])
     #def bound(self):
         #if r==0:
             #xi,xa=[self.p[0],self.q[0]].sort()

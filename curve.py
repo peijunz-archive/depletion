@@ -1,54 +1,6 @@
 #! /usr/bin/env python3
 from pylab import *
 from segm import *
-def tricur(r):
-    p0=rect(r,-uni)
-    p1=rect(r,3*uni)
-    s1=segm(0,p0,p1)
-    s2=s1.rots(4*uni)
-    s3=s1.rots(8*uni)
-    return [s1,s2,s3]
-def tricave(r,theta):
-    #theta should be less than uni
-    sc=segm(r,[0,0],[-uni+theta,3*uni-theta])
-    p1=rect(r,3*uni-theta)
-    p2=array([0,p1[1]-sqrt(3)*p1[0]])
-    p3=rect(r,3*uni+theta)
-    s1=segm(0,p1,p2)
-    s2=segm(0,p2,p3)
-    c1=[sc,s1,s2]
-    c2=rotc(c1,4*uni)
-    c3=rotc(c1,8*uni)
-    return c1+c2+c3
-def tritri(r,d):
-    #theta should be less than uni
-    sc=segm(r,[0,0],[-uni+theta,3*uni-theta])
-    p1=rect(r,3*uni-theta)
-    p2=array([0,p1[1]-sqrt(3)*p1[0]])
-    p3=rect(r,3*uni+theta)
-    s1=segm(0,p1,p2)
-    s2=segm(0,p2,p3)
-    c1=[sc,s1,s2]
-    c2=rotc(c1,4*uni)
-    c3=rotc(c1,8*uni)
-    return c1+c2+c3
-def conc(H,b,r,h):
-    '''Constrution of basic curve'''
-    cur=[]
-    for i in range(3):
-        rt=i*4*uni
-        p=rotp([-b,H],rt)
-        q=rotp([b,H],rt)
-        top=rotp([0,H+h],rt)
-        cen=rect(r,rt+pi+uni)
-        p1=rotp(p,-4*uni)
-        z=arctan2(p1[1]-cen[1],p1[0]-cen[0])
-        w=arctan2(q[1]-cen[1],q[0]-cen[0])
-        R=norm2(q-cen)
-        cur.append(segm(R,cen,[z,w]))
-        cur.append(segm(0,q,top))
-        cur.append(segm(0,top,p))
-    return cur
 def drawc(cur,prop='b'):
     '''draw the curve in matplotlib'''
     for seg in cur:
@@ -216,10 +168,9 @@ def poten(cur1,cur2,distance,rp):
     return -intsecc(cr1,cr2)
 #@profile
 def closest(t1,t2,rp):
-    #TODO:提高效率
     lef=1
     rig=3
-    num=12+int(floor(log((rig-lef)/rp)))
+    num=13+int(floor(log((rig-lef)/rp)))
     for i in range(num):
         cen=(lef+rig)/2
         #print(issec(t1,shiftc(t2,[cen,0])))
@@ -249,33 +200,7 @@ def draw2(c1,cur2,distance,rp):
     print(intsecc(t1,t2))
     return 0
 def binde(a,b,t1,t2,rp):
-
     c1=rotc(a,t1)
     c2=rotc(b,t2)
     r1=closest(c1,c2,rp)
     return poten(c1,c2,r1,rp)
-def center1(delta,pt):
-    x=linspace(-uni-delta*uni,-uni+delta*uni,pt)
-    y=linspace(uni-delta*uni,uni+delta*uni,pt)
-    return x,y
-def center2(delta,pt):
-    x=linspace(uni-delta*uni,uni+delta*uni,pt)
-    y=linspace(-uni-delta*uni,-uni+delta*uni,pt)
-    return x,y
-def curve1():
-    c1=conc(1,0.2,1,0.5)
-    c2=conc(1,0.2,1,-0.5)
-    return c1,c2
-def curve2(r=1,theta=uni/2):
-    c1=tricur(r)
-    c2=tricave(r,theta)
-    return c1,c2
-def curve3():
-    s1=segm(1,[0,0],[-uni,2*uni])
-    s2=segm(-1,[0,sqrt(3)],[-2*uni,-3*uni])
-    s3=segm(0,[0,sqrt(3)-1],[0,1])
-    c0=[s1,s2,s3]
-    c1=rotc(c0,4*uni)
-    c2=rotc(c0,8*uni)
-    c=c0+c1+c2
-    return c,c
