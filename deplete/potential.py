@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-from curve import *
-from instance import *
+from .curve import *
+from .instance import *
+def binding_energy(*arg):
+    pass
 c1,c2=curve7()
 rp=0.03
 side=2
@@ -13,7 +15,7 @@ p=0
 for i in range(n):
     #print(i)
     for j in range(m):
-        z[i,j]=binde(c1,c2,y[i],x[j],rp)
+        z[i,j]=binding_energy(c1,c2,y[i],x[j],rp)
         print(x[j]/uni,y[i]/uni,z[i,j])
 x/=uni
 y/=uni
