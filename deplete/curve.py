@@ -1,17 +1,25 @@
 from .segm import *
 class Curve(list):
+    '''Curve class for boundaries of colloids'''
     def __init__(self, segm_list):  
+        '''Initialize by segment list'''
         list.__init__([])
         self.extend(segm_list)
     def __str__(self):
         return '\n'.join([str(i) for i in self])
     def __add__(self, rhs):
-        '''Use + to add multiple curves together'''
-        return test(list.__add__(self, rhs))
+        '''Use + to add multiple curves together while preserving Curve class'''
+        return Curve(list.__add__(self, rhs))
     def draw(self, *args, **kargs):
-        '''draw the curve in matplotlib'''
+        '''Draw the curve in matplotlib
+        Use uniform properties for all'''
+        points=concatenate([seg.draw_raw() for seg in self], axis=0).transpose()
+        plot(*points, *args, **kargs)
+    def draw_each(self, *args, **kargs):
+        '''draw the curve in matplotlib
+        use new properties for each'''
         for seg in self:
-            seg.draw(*args, **kargs)
+            self.draw(*args, **kargs)
     def shift(self, delta):
         '''shift of a curve'''
         return Curve(seg.shift(delta) for seg in self)
@@ -54,13 +62,22 @@ class Curve(list):
                 ext.append(Circle(abs(dis), former.end(), [angle, delta]))
         #Cut the redundant part of the curve
         return Curve(ext)
-    def split(self):
+    def _split(self):
+        '''Find the self intersecting points
+        and use them to split curve into curves.
+        It is designed for finding outmost boundaries'''
         return PCurve(self).cut().separate()
+    def clean(self):
+        return Curve(seg for seg in self if seg.scale()>err)
     def offset(self, d):
-        cur=max(self.offset_raw(d).split(), key=Curve.area)
-        return Curve(seg for seg in cur if abs(seg.r)>err)
+        '''Offset the out boundary.
+        TODO add function for inner boundary by "negative" offset? '''
+        cur=max(self.offset_raw(d)._split(), key=Curve.area)
+        return cur.clean()
     @staticmethod
     def intersect(cur1, cur2):
+        '''Intersect curves, and return simple curve components
+        of the new curve'''
         pc=PCurve.join(PCurve(cur1), PCurve(cur2))
         l=len(pc)
         pc.cut()
@@ -69,6 +86,7 @@ class Curve(list):
         return pc.separate()
     @staticmethod
     def interarea(cur1, cur2):
+        '''Intersection area between two curves'''
         curs=Curve.intersect(cur1, cur2)
         if curs:
             areas=[cur.area() for cur in curs]
@@ -77,6 +95,7 @@ class Curve(list):
         else:
             return False
 class PCurve(list):
+    '''Utility for Curve based on (start + curves + ending)'''
     def __init__(self, cur, shift=0):
         list.__init__([])
         l=len(cur)
@@ -125,6 +144,7 @@ class PCurve(list):
                 yield Curve(tmp)
     @staticmethod
     def join(pc1, pc2):
+        '''Join them into one'''
         l=len(pc1)
         for p in pc2:
             p[2]+=l

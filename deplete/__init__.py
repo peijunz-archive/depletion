@@ -1,1 +1,1 @@
-__all__ = ['segm', 'curve', 'instance']
+__all__ = ['segm', 'curve', 'colloids']
