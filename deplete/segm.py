@@ -1,13 +1,14 @@
 #! /usr/bin/env python3
-from pylab import * #TODO Simplify the pylab import
-pie=pi/6
+import numpy as np
+import matplotlib.pyplot as plt
+pie=np.pi/6
 err=1e-10
 def norm2(l):
     '''Norm of 2D vector
     >>> norm2([3,4])
     5.0
     '''
-    return sqrt(l[0]*l[0]+l[1]*l[1])
+    return np.sqrt(l[0]*l[0]+l[1]*l[1])
 def cross2(a,b):
     '''Cross product
     >>> cross2([1.,2],[2,1])
@@ -16,40 +17,40 @@ def cross2(a,b):
     return a[0]*b[1]-b[0]*a[1]
 def pol2rect(theta):
     '''
-    >>> pol2rect(pi/2)[1]==1.0
+    >>> pol2rect(np.pi/2)[1]==1.0
     True
     '''
-    return array([cos(theta), sin(theta)])
+    return np.array([np.cos(theta), np.sin(theta)])
 def rect2pol(n):
     '''
-    >>> rect2pol(pol2rect(pi/3))-pi/3
+    >>> rect2pol(pol2rect(np.pi/3))-np.pi/3
     0.0
     '''
-    return arctan2(n[1], n[0])
+    return np.arctan2(n[1], n[0])
 def rot_point(p,theta):
     '''Rotation a point about origin
-    >>> rect2pol(rot_point([0, 1.0], pi/3))-5*pi/6
+    >>> rect2pol(rot_point([0, 1.0], np.pi/3))-5*np.pi/6
     0.0
     '''
-    c=cos(theta)
-    s=sin(theta)
-    M=array([[c,-s],[s,c]])
+    c=np.cos(theta)
+    s=np.sin(theta)
+    M=np.array([[c,-s],[s,c]])
     return M.dot(p)
 def normalize_angle(base,theta):
-    """Get a angle in the (0, 2*pi) relative to base
+    """Get a angle in the (0, 2*np.pi) relative to base
     #TODO Edge cases?
     >>> normalize_angle(0, 0.01)
     0.01
-    >>> normalize_angle(1, 2*pi)==2*pi-1
+    >>> normalize_angle(1, 2*np.pi)==2*np.pi-1
     True
-    >>> normalize_angle(1, 2*pi+2)==1.0
+    >>> normalize_angle(1, 2*np.pi+2)==1.0
     True
     """
     delta=theta-base
-    return delta-floor(delta/(2*pi))*2*pi
+    return delta-np.floor(delta/(2*np.pi))*2*np.pi
 def angle_between(q, theta):
-    '''Find a theta+2*k*pi between range q
-    >>> angle_between([pi/6, pi/3], pi/3)==pi/6
+    '''Find a theta+2*k*np.pi between range q
+    >>> angle_between([np.pi/6, np.pi/3], np.pi/3)==np.pi/6
     True
     '''
     delta=normalize_angle(q[0], theta)
@@ -57,7 +58,7 @@ def angle_between(q, theta):
         if delta<q[1]:
             return delta
     else:
-        delta-=2*pi
+        delta-=2*np.pi
         if delta>q[1]:
             return delta
     return False
@@ -68,7 +69,7 @@ class Segm:
         return '{}{}{}'.format(self.start(), self.symbol(), self.end())
     def draw(self, *args, **kargs):
         """Draw the segment by matplotlib"""
-        plot(*(self.draw_raw().transpose()), *args, **kargs)
+        plt.plot(*(self.draw_raw().transpose()), *args, **kargs)
     @staticmethod
     def interll(s1,s2):
         '''intersection of two line segment'''
@@ -93,18 +94,18 @@ class Segm:
         b=l.q-c.p
         delta=l.p-l.q
         direc=delta/norm2(delta)#直线的方向矢量
-        vert=a-dot(a,direc)*direc#垂线矢量，减去它相当于做投影变换
+        vert=a-np.dot(a,direc)*direc#垂线矢量，减去它相当于做投影变换
         h=norm2(vert)#垂线长度height
         ah=a-vert
         bh=b-vert
         ret=[]
         if h<abs(c.r):
-            con=sqrt(c.r**2-h**2)
+            con=np.sqrt(c.r**2-h**2)
             pm=[con*direc,-con*direc]
             for i in pm:
                 theta=rect2pol(vert+i)
                 #print(theta,c.q)
-                if dot(ah-i,bh-i)<-err and angle_between(c.q,theta+err) and angle_between(c.q,theta-err):
+                if np.dot(ah-i,bh-i)<-err and angle_between(c.q,theta+err) and angle_between(c.q,theta-err):
                     ret.append(c.p+vert+i)
         return ret
     @staticmethod
@@ -116,9 +117,9 @@ class Segm:
         if abs(c1.r-c2.r)+err<d<c1.r+c2.r-err:
             #print(c1.r,c2.r,d)
             t1=rect2pol(delta)
-            t2=t1+pi
-            phi1=arccos((c1.r**2+d**2-c2.r**2)/(2*c1.r*d))
-            phi2=-arccos((c2.r**2+d**2-c1.r**2)/(2*c2.r*d))
+            t2=t1+np.pi
+            phi1=np.arccos((c1.r**2+d**2-c2.r**2)/(2*c1.r*d))
+            phi2=-np.arccos((c2.r**2+d**2-c1.r**2)/(2*c2.r*d))
             for i in [1,-1]:
                 if angle_between(c1.q,t1+i*phi1) and angle_between(c2.q,t2+i*phi2):
                     ret.append(c1.p+c1.r*pol2rect(t1+i*phi1))
@@ -130,13 +131,13 @@ class Segm:
         Calculate and compare the bound maybe useful
         This is the key function affect the performance
         '''
-        if isinf(s1.r):
-            if isinf(s2.r):
+        if np.isinf(s1.r):
+            if np.isinf(s2.r):
                 return Segm.interll(s1,s2)
             else:
                 return Segm.interlc(s1,s2)
         else:
-            if isinf(s2.r):
+            if np.isinf(s2.r):
                 return Segm.interlc(s2,s1)
             else:
                 return Segm.intercc(s1,s2)
@@ -146,15 +147,15 @@ class Segm:
 class Line(Segm):
     def __init__(self, start_p, end_p):
         '''Line Segment defined by starting point and ending point'''
-        self.r=inf
-        self.p=array(start_p)
-        self.q=array(end_p)
+        self.r=np.inf
+        self.p=np.array(start_p)
+        self.q=np.array(end_p)
     def __repr__(self):
         return 'Line({}, {})'.format(list(self.p), list(self.q))
     def _angle(self):
         '''Angle between line and x-axis'''
         v=self.q-self.p
-        return arctan2(v[1], v[0])
+        return np.arctan2(v[1], v[0])
     def _dir(self):
         '''Calculate direction vector of line'''
         v=self.q-self.p
@@ -180,7 +181,7 @@ class Line(Segm):
         '''Ending tangent direction vector'''
         return self._dir()
     def draw_raw(self):
-        return array([self.p, self.q])
+        return np.array([self.p, self.q])
     def shift(self, delta):
         '''add a delta=(dx,dy) shift to the segment'''
         return Line(self.p+delta, self.q+delta)
@@ -195,12 +196,12 @@ class Line(Segm):
         return Line(self.p,pt), Line(pt,self.q)
     def extend(self, distance):
         '''Extend the line in the positive direction'''
-        return self.shift(distance*rot_point(self.end_dir(),-pi/2))
+        return self.shift(distance*rot_point(self.end_dir(),-np.pi/2))
 class Circle(Segm):
     def __init__(self, radius, center, angles):
         '''Use relative angle, r>0'''
         self.r=radius
-        self.p=array(center)
+        self.p=np.array(center)
         self.q=angles
         self.qend=self.q[0]+self.q[1]
     def symbol(self):
@@ -212,23 +213,23 @@ class Circle(Segm):
         """Draw the segment by matplotlib, one point for 0.1 rad"""
         x,y=self.p
         z,w=self.q
-        angles=z+linspace(0, w, 3+10*abs(w))
-        A=empty([len(angles), 2])
-        A[:, 0]=x+self.r*cos(angles)
-        A[:, 1]=y+self.r*sin(angles)
+        angles=z+np.linspace(0, w, 3+10*abs(w))
+        A=np.empty([len(angles), 2])
+        A[:, 0]=x+self.r*np.cos(angles)
+        A[:, 1]=y+self.r*np.sin(angles)
         return A
     def start_angle(self):
         '''Starting tangent angle'''
         if self.q[1]>0:
-            return self.q[0]+pi/2
+            return self.q[0]+np.pi/2
         else:
-            return self.q[0]-pi/2
+            return self.q[0]-np.pi/2
     def end_angle(self):
         '''Ending tangent angle'''
         if self.q[1]>0:
-            return self.qend+pi/2
+            return self.qend+np.pi/2
         else:
-            return self.qend-pi/2
+            return self.qend-np.pi/2
     def start(self):
         '''Starting point'''
         return self.p+self.r*pol2rect(self.q[0])

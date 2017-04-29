@@ -13,8 +13,8 @@ class Curve(list):
     def draw(self, *args, **kargs):
         '''Draw the curve in matplotlib
         Use uniform properties for all'''
-        points=concatenate([seg.draw_raw() for seg in self], axis=0).transpose()
-        plot(*points, *args, **kargs)
+        points=np.concatenate([seg.draw_raw() for seg in self], axis=0).transpose()
+        plt.plot(*points, *args, **kargs)
     def draw_each(self, *args, **kargs):
         '''draw the curve in matplotlib
         use new properties for each'''
@@ -32,8 +32,8 @@ class Curve(list):
         area=0
         for seg in self:
             area+=cross2(seg.start(), seg.end())/2
-            if not isinf(seg.r):
-                area+=(seg.q[1]-sin(seg.q[1]))*seg.r**2/2
+            if not np.isinf(seg.r):
+                area+=(seg.q[1]-np.sin(seg.q[1]))*seg.r**2/2
         return area
     def offset_raw(self, dis):
         '''offset curve and dis is boldness of offset
@@ -55,10 +55,10 @@ class Curve(list):
             elif sig*dis>0:
                 # Angles?
                 delta=normalize_angle(former.end_angle(), latter.start_angle())
-                angle=former.end_angle()-pi/2
+                angle=former.end_angle()-np.pi/2
                 if dis<0:
-                    delta-=2*pi
-                    angle+=pi
+                    delta-=2*np.pi
+                    angle+=np.pi
                 ext.append(Circle(abs(dis), former.end(), [angle, delta]))
         #Cut the redundant part of the curve
         return Curve(ext)
@@ -128,7 +128,7 @@ class PCurve(list):
     def separate(self):
         '''separate the different close simple curves'''
         l=len(self)
-        sig=zeros(l)
+        sig=np.zeros(l)
         for i in range(l):
             if sig[i]==0:
                 t=self[i]

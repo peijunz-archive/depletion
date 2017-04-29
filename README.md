@@ -1,1 +1,1 @@
-Please go to [Tutorial.ipynb](colloids.ipynb) for some intro
+Please go to [colloids.ipynb](colloids.ipynb) for some intro
