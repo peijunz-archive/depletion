@@ -55,11 +55,11 @@ def angle_between(q, theta):
     '''
     delta=normalize_angle(q[0], theta)
     if q[1]>0:
-        if delta<q[1]:
+        if err<delta<q[1]-err:
             return delta
     else:
         delta-=2*np.pi
-        if delta>q[1]:
+        if -err>delta>q[1]+err:
             return delta
     return False
 class Segm:
@@ -105,7 +105,7 @@ class Segm:
             for i in pm:
                 theta=rect2pol(vert+i)
                 #print(theta,c.q)
-                if np.dot(ah-i,bh-i)<-err and angle_between(c.q,theta+err) and angle_between(c.q,theta-err):
+                if np.dot(ah-i,bh-i)<-err and angle_between(c.q, theta):
                     ret.append(c.p+vert+i)
         return ret
     @staticmethod
@@ -121,7 +121,7 @@ class Segm:
             phi1=np.arccos((c1.r**2+d**2-c2.r**2)/(2*c1.r*d))
             phi2=-np.arccos((c2.r**2+d**2-c1.r**2)/(2*c2.r*d))
             for i in [1,-1]:
-                if angle_between(c1.q,t1+i*phi1) and angle_between(c2.q,t2+i*phi2):
+                if angle_between(c1.q, t1+i*phi1) and angle_between(c2.q, t2+i*phi2):
                     ret.append(c1.p+c1.r*pol2rect(t1+i*phi1))
         return ret
     def intersect(s1,s2):

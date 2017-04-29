@@ -19,7 +19,7 @@ class Curve(list):
         '''draw the curve in matplotlib
         use new properties for each'''
         for seg in self:
-            self.draw(*args, **kargs)
+            seg.draw(*args, **kargs)
     def shift(self, delta):
         '''shift of a curve'''
         return Curve(seg.shift(delta) for seg in self)
@@ -72,7 +72,7 @@ class Curve(list):
     def offset(self, d):
         '''Offset the out boundary.
         TODO add function for inner boundary by "negative" offset? '''
-        cur=max(self.offset_raw(d)._split(), key=Curve.area)
+        cur=max(self.offset_raw(d).clean()._split(), key=Curve.area)
         return cur.clean()
     @staticmethod
     def intersect(cur1, cur2):
@@ -106,6 +106,7 @@ class PCurve(list):
         i=1
         while i<len(self):
             for j in range(i):
+                #print(i, j, self[j][1], self[i][1])
                 lis=Segm.intersect(self[j][1],self[i][1])
                 if len(lis)==0:
                     continue
@@ -120,9 +121,9 @@ class PCurve(list):
                 jnex=self[j][2]
                 inex=self[i][2]
                 self[i][1:]=[s3,len(self)]
-                self.append([p,s2,jnex])
+                self.append([p, s2, jnex])
                 self[j][1:]=[s1,len(self)]
-                self.append([p,s4,inex])
+                self.append([p, s4, inex])
             i+=1
         return self
     def separate(self):
