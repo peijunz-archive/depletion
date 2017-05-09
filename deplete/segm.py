@@ -142,8 +142,8 @@ class Segm:
             phi1 = np.arccos((c1.r**2 + d**2 - c2.r**2) / (2 * c1.r * d))
             phi2 = -np.arccos((c2.r**2 + d**2 - c1.r**2) / (2 * c2.r * d))
             for i in [1, -1]:
-                if angle_between(c1.q, t1 + i * phi1) and
-                angle_between(c2.q, t2 + i * phi2):
+                if angle_between(c1.q, t1 + i * phi1) and\
+                        angle_between(c2.q, t2 + i * phi2):
                     ret.append(c1.p + c1.r * pol2rect(t1 + i * phi1))
         return ret
 
@@ -241,8 +241,12 @@ class Line(Segm):
         '''Extend the line in the positive direction'''
         return self.shift(distance * rot_point(self.end_dir(), -np.pi / 2))
 
+    def length(self):
+        return norm2(self.p - self.q)
+
 
 class Circle(Segm):
+    _dots = 15
 
     def __init__(self, radius, center, angles):
         '''Use relative angle, r>0'''
@@ -250,6 +254,10 @@ class Circle(Segm):
         self.p = np.array(center)
         self.q = angles
         self.qend = self.q[0] + self.q[1]
+
+    def set_dots(d=15):
+        '''Set dots each radian'''
+        Circle._dots = max(int(d), 6)
 
     def symbol(self):
         '''Mark direction of circles'''
@@ -262,7 +270,7 @@ class Circle(Segm):
         """Draw the segment by matplotlib, one point for 0.1 rad"""
         x, y = self.p
         z, w = self.q
-        angles = z + np.linspace(0, w, 3 + 10 * abs(w))
+        angles = z + np.linspace(0, w, 3 + Circle._dots * abs(w))
         A = np.empty([len(angles), 2])
         A[:, 0] = x + self.r * np.cos(angles)
         A[:, 1] = y + self.r * np.sin(angles)
@@ -326,6 +334,11 @@ class Circle(Segm):
             return Circle(self.r + dis, self.p, self.q)
         else:
             return Circle(self.r - dis, self.p, self.q)
+
+    def length(self):
+        return abs(self.r * self.q[1])
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

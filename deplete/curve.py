@@ -48,6 +48,9 @@ class Curve(list):
                 area += (seg.q[1] - np.sin(seg.q[1])) * seg.r**2 / 2
         return area
 
+    def perimeter(self):
+        return sum(i.length() for i in self)
+
     def offset_raw(self, dis):
         '''offset curve and dis is boldness of offset
         1. Get piles of smaller simple curves of its raw extension
