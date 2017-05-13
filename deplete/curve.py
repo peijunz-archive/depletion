@@ -1,4 +1,4 @@
-from .segm import *
+from .segm import Segm, Circle, Line, normalize_angle, cross2, np, plt, err
 
 
 class Curve(list):

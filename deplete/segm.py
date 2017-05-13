@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-pie = np.pi / 6
 err = 1e-10
 
 
